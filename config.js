@@ -17,7 +17,7 @@ window.SAIFS_CONFIG = {
   leadDays: { ready: 3, custom: 7 },
 
   // Delivery only (no self-pickup).
-  delivery: { fee: 12, freeAbove: 150, note: "Islandwide · $12, free above $150" },
+  delivery: { fee: 20, freeAbove: 150, note: "Islandwide · $20, free above $150" },
   slots: ["10am – 12pm", "2pm – 4pm", "5pm – 7pm"],
 
   // Dates Ain is fully booked or closed (YYYY-MM-DD).
