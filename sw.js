@@ -1,5 +1,5 @@
 /* Keeps the site working on a patchy connection: network first, cached copy as fallback. */
-const CACHE = "saifs-v5";
+const CACHE = "saifs-v6";
 self.addEventListener("install", e => self.skipWaiting());
 self.addEventListener("activate", e => e.waitUntil(self.clients.claim()));
 self.addEventListener("fetch", e => {

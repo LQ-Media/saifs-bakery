@@ -215,3 +215,46 @@ body[data-mode="step"] .tabs{display:none}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 @media (min-width:640px){.paths{grid-template-columns:1fr 1fr}.path{grid-template-columns:1fr}.path img{height:170px;order:-1}.grid2{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+/* ===== Lively home (design 1 + sliding cake rows) ===== */
+.homehero{position:relative;overflow:hidden;margin-inline:calc(-1 * max(16px,env(safe-area-inset-left,0px)));padding:6px max(16px,env(safe-area-inset-right,0px)) 18px max(16px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px}
+.sprinkles{position:absolute;inset:0;pointer-events:none;z-index:0}
+.sprinkles span{position:absolute;top:0;width:6px;height:16px;border-radius:4px;animation:sfall linear infinite}
+@keyframes sfall{0%{transform:translateY(-40px) rotate(0);opacity:0}10%{opacity:1}100%{transform:translateY(760px) rotate(540deg);opacity:1}}
+.burst-title{position:relative;z-index:1;font-family:var(--display);font-weight:700;font-size:clamp(40px,11.5vw,56px);line-height:1;letter-spacing:-.02em;margin:8px 0 0}
+.burst-title .ln{display:block;overflow:hidden;padding-bottom:4px}
+.burst-title .w{display:inline-block;animation:wordIn .7s cubic-bezier(.2,.9,.3,1.3) both;animation-delay:var(--d)}
+.burst-title .em{color:var(--accent);font-style:italic}
+.burst-title .hl{background:var(--butter);padding:0 8px;border-radius:10px}
+@keyframes wordIn{0%{transform:translateY(110%) rotate(6deg);opacity:0}100%{transform:none;opacity:1}}
+.marquee{position:relative;z-index:1;display:flex;flex-direction:column;gap:12px;transform:rotate(-4deg);margin:10px -40px 0;padding-block:6px}
+.mrow{overflow:hidden}
+.track{display:flex;gap:12px;width:max-content}
+.track.l{animation:mleft 30s linear infinite}
+.track.r{animation:mright 34s linear infinite}
+.marquee:hover .track{animation-play-state:paused}
+@keyframes mleft{to{transform:translateX(-50%)}}
+@keyframes mright{from{transform:translateX(-50%)}to{transform:translateX(0)}}
+.tile{display:block;padding:0;cursor:pointer;width:118px;height:148px;border-radius:20px;overflow:hidden;flex-shrink:0;border:3px solid #FFFFFF;box-shadow:0 10px 24px rgba(59,42,32,.16);transition:transform .25s;background:var(--stage)}
+.tile:hover,.tile:focus-visible{transform:scale(1.06) rotate(-2deg)}
+.tile img{width:100%;height:100%;object-fit:cover}
+.spinbadge{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:118px;z-index:2;animation:bspin 14s linear infinite}
+@keyframes bspin{to{transform:rotate(360deg)}}
+.ctas{position:relative;z-index:1;display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.bigcta{height:58px;border-radius:29px;background:var(--accent);color:#FFFFFF;font-weight:900;font-size:17px;display:flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;animation:ctapulse 2s infinite}
+@keyframes ctapulse{0%,100%{box-shadow:0 0 0 0 rgba(168,77,46,.45)}70%{box-shadow:0 0 0 16px rgba(168,77,46,0)}}
+.ghostcta{height:52px;border-radius:26px;border:2px solid var(--ink);background:#FFFFFF;color:var(--ink);font-weight:800;font-size:15px;display:flex;align-items:center;justify-content:center;text-decoration:none}
+
+/* header cart button + floating pill nav, site-wide */
+.top .iconbtn[href="#cart"]{background:var(--butter);border:2px solid var(--ink)}
+.tabs{left:16px;right:16px;bottom:calc(14px + env(safe-area-inset-bottom,0px));padding-bottom:0;background:transparent;border-top:0;pointer-events:none}
+.tabs .wrap{pointer-events:auto;background:var(--ink);border-radius:31px;height:62px;align-items:center;padding:0 8px;max-width:560px;box-shadow:0 12px 30px rgba(59,42,32,.25)}
+.tabs a{flex:1;min-height:46px;border-radius:23px;color:#F1E6D6;flex-direction:row;font-size:13px;gap:6px}
+.tabs a::before{display:none}
+.tabs a[aria-current="page"]{background:var(--butter);color:var(--ink)}
+.tabs .badge{position:static;margin-left:2px}
+main{padding-bottom:calc(100px + env(safe-area-inset-bottom,0px))}
+.toast{bottom:calc(92px + env(safe-area-inset-bottom,0px))}
+
+@media (prefers-reduced-motion: reduce){.sprinkles{display:none}.track{animation:none!important}.spinbadge,.bigcta{animation:none}}
+@media (min-width:640px){.tile{width:150px;height:188px}}

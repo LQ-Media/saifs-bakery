@@ -96,8 +96,19 @@ function gcard(g) {
     '<span class="meta"><span class="nm">' + esc(g.name) + '</span><span class="sb">' + esc(g.meta) + '</span><span class="go">Make this mine →</span></span></button>';
 }
 function renderHome() {
-  $("#readyNote").textContent = "For any day. Order " + C.leadDays.ready + " days ahead.";
-  if (!$("#homeScroller").children.length) $("#homeScroller").innerHTML = C.gallery.slice(0, 6).map(gcard).join("");
+  $("#readyNote").textContent = "Ready-made bakes need " + C.leadDays.ready + " days’ notice; custom orders " + C.leadDays.custom + ".";
+  if ($("#row1").children.length) return;
+  var thumb = function (p) { return p.replace("img/", "img/thumbs/"); };
+  var cakes = C.gallery.filter(function (g) { return g.preset && g.preset.type !== "cupcakes"; });
+  var rest = C.gallery.filter(function (g) { return !g.preset || g.preset.type === "cupcakes"; }).concat(C.products.filter(function (p) { return p.cat !== "cakes"; }));
+  var tile = function (it) {
+    return '<button class="tile" type="button" data-' + (it.preset ? "design" : "prod") + '="' + it.id + '" tabindex="-1" aria-label="' + esc(it.name) + '"><img src="' + thumb(it.photo) + '" alt="" loading="eager" decoding="async"></button>';
+  };
+  var dbl = function (arr) { return arr.concat(arr).map(tile).join(""); };
+  $("#row1").innerHTML = dbl(cakes); $("#row2").innerHTML = dbl(rest);
+  var cols = ["#F28B82", "#7FB7E6", "#F2C66D", "#8CCB8A", "#E9B49E", "#A84D2E", "#C7A1E8"], sp = "";
+  for (var i = 0; i < 26; i++) sp += '<span style="left:' + ((i * 53) % 100) + '%;background:' + cols[i % 7] + ';animation-duration:' + (6 + (i * 37) % 7) + 's;animation-delay:-' + ((i * 13) % 9) + 's"></span>';
+  $("#sprinkles").innerHTML = sp;
 }
 function renderShop() {
   var cats = [["cakes", "Cakes"], ["cupcakes", "Cupcakes"], ["bakes", "Tarts & bakes"]];
