@@ -77,7 +77,33 @@ function route() {
   $$(".tabs a").forEach(function (a) { if (a.dataset.tab === TAB[v]) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
   ({ home: renderHome, shop: renderShop, product: renderProduct, gallery: renderGallery, custom: renderCustom, cart: renderCart, date: renderDate, send: renderSend, done: function () {} })[v]();
   if (v !== "custom" && live) live.stop();
+  popWords($("#v-" + v));
+  if (v === "done") sprinkleBurst();
   window.scrollTo(0, 0);
+}
+/* Design 1: headlines pop in word by word */
+function popWords(view) {
+  $$(".h1, .h2.big", view).forEach(function (h) {
+    if (h.dataset.popped === h.textContent) return;
+    var text = h.textContent.trim();
+    h.setAttribute("aria-label", text);
+    h.innerHTML = text.split(/\s+/).map(function (w, i) { return '<span class="pw" aria-hidden="true" style="--d:' + (i * 0.07).toFixed(2) + 's">' + esc(w) + "</span>"; }).join(" ");
+    h.dataset.popped = h.textContent;
+  });
+  view.classList.remove("enter"); void view.offsetWidth; view.classList.add("enter");
+}
+/* Design 1: sprinkles everywhere, burst on success */
+function bgSprinkles() {
+  var cols = ["#F28B82", "#7FB7E6", "#F2C66D", "#8CCB8A", "#E9B49E", "#A84D2E", "#C7A1E8"], sp = "";
+  for (var i = 0; i < 14; i++) sp += '<span style="left:' + ((i * 71) % 100) + '%;background:' + cols[i % 7] + ';animation-duration:' + (9 + (i * 37) % 7) + 's;animation-delay:-' + ((i * 13) % 11) + 's"></span>';
+  var d = document.createElement("div"); d.className = "bgsprinkles"; d.setAttribute("aria-hidden", "true"); d.innerHTML = sp; document.body.prepend(d);
+}
+function sprinkleBurst() {
+  var host = $("#v-done .ok"); if (!host) return;
+  var old = $(".burstbox"); if (old) old.remove();
+  var cols = ["#F28B82", "#7FB7E6", "#F2C66D", "#8CCB8A", "#A84D2E", "#E9B49E", "#C7A1E8"], h = "";
+  for (var i = 0; i < 36; i++) { var a = i / 36 * Math.PI * 2, r = 110 + (i * 37) % 120; h += '<span style="--dx:' + Math.round(Math.cos(a) * r) + 'px;--dy:' + Math.round(Math.sin(a) * r - 60) + 'px;--rot:' + ((i * 47) % 720) + 'deg;background:' + cols[i % 7] + '"></span>'; }
+  var b = document.createElement("div"); b.className = "burstbox"; b.setAttribute("aria-hidden", "true"); b.innerHTML = h; host.appendChild(b);
 }
 function go(v) { if (location.hash === "#" + v) route(); else location.hash = v; }
 window.addEventListener("hashchange", route);
@@ -382,6 +408,6 @@ $("#copyBtn").addEventListener("click", function () {
 
 /* ---------------- boot ---------------- */
 $("#instaLink").href = C.instagram; $("#footInsta").href = C.instagram;
-badges(); route();
+badges(); bgSprinkles(); route();
 if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js").catch(function () {});
 })();
