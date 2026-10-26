@@ -9,11 +9,7 @@
   --body:"Nunito Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
   color-scheme:light;
 }
-@media (prefers-color-scheme: dark){
-  :root{ --bg:#1C1410; --surface:#271D17; --ink:#F6ECDF; --muted:#C9B6A3; --line:#3D2E25;
-    --accent:#E0875F; --accent-ink:#1C1410; --accent-soft:#4A2B1F; --butter:#E8BE62; --on-butter:#2A1D15;
-    --sage:#2F3A2B; --stage:#2E231C; --chip:#221913; --olive:#C9CBA8; --wa:#2FB06A; color-scheme:dark }
-}
+
 *{box-sizing:border-box}
 html,body{margin:0}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.45;-webkit-font-smoothing:antialiased;padding-top:env(safe-area-inset-top,0px)}
