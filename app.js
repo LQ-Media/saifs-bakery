@@ -25,7 +25,7 @@ var CAKE_SIZES = [["5", '5"', "4–6 pax"], ["6", '6"', "8–10 pax"], ["7", '7"
 var CUP_COUNTS = { Regular: [6, 12, 24], Mini: [16, 25, 50] };
 
 /* ---------------- state ---------------- */
-var S = { shopCat: "cakes", occ: "any", galTheme: "all", pd: null, custom: null, cart: [], date: null, mode: "Pickup", slot: C.slots[1] || C.slots[0], calMonth: null, stageView: "3d" };
+var S = { shopCat: "cakes", occ: "any", galTheme: "all", pd: null, custom: null, cart: [], date: null, slot: C.slots[1] || C.slots[0], mode: "Delivery", calMonth: null, stageView: "3d" };
 try { var saved = JSON.parse(localStorage.getItem("saifs-cart") || "[]"); if (Array.isArray(saved)) S.cart = saved; } catch (e) {}
 function saveCart() { try { localStorage.setItem("saifs-cart", JSON.stringify(S.cart)); } catch (e) {} }
 
@@ -49,10 +49,16 @@ function customPrice(c) {
     var base = P.cake && P.cake[c.size]; if (!isNum(base)) return null; total += base;
     if (c.tiers === 2) { if (!isNum(P.secondTier)) return null; total += P.secondTier; }
     if (c.finish === "Fondant") { if (!isNum(P.fondant)) return null; total += P.fondant; }
+    if (c.shape === "heart" && isNum(P.heartShape)) total += P.heartShape;
+    c.decor.forEach(function (d) { if (P.decor && isNum(P.decor[d])) total += P.decor[d]; });
   }
-  if (c.type !== "cake") { var cp = P.cupcakes && P.cupcakes[c.cupSize] && P.cupcakes[c.cupSize][c.cupCount]; if (!isNum(cp)) return null; total += cp; }
-  return total;
+  if (c.type !== "cake") {
+    var cp = P.cupcakes && P.cupcakes[c.cupSize] && P.cupcakes[c.cupSize][c.cupCount]; if (!isNum(cp)) return null; total += cp;
+    if (c.decor.has("Theme toppers") && P.cupcakeToppers && isNum(P.cupcakeToppers[c.cupSize])) total += P.cupcakeToppers[c.cupSize] * c.cupCount;
+  }
+  return Math.round(total);
 }
+function deliveryFee(sub) { var d = C.delivery || {}; if (!isNum(d.fee)) return null; return isNum(d.freeAbove) && isNum(sub) && sub >= d.freeAbove ? 0 : d.fee; }
 function priceText(n) { return C.showPrices && isNum(n) ? money(n) : null; }
 
 /* ---------------- routing ---------------- */
@@ -268,7 +274,14 @@ $("#cAdd").addEventListener("click", function () {
 
 /* ---------------- cart ---------------- */
 function lead() { return S.cart.some(function (i) { return i.type === "custom"; }) ? C.leadDays.custom : C.leadDays.ready; }
-function total() { var t = 0; for (var i = 0; i < S.cart.length; i++) { if (!isNum(S.cart[i].price)) return null; t += S.cart[i].price * S.cart[i].qty; } return t; }
+function subtotal() { var t = 0; for (var i = 0; i < S.cart.length; i++) { if (!isNum(S.cart[i].price)) return null; t += S.cart[i].price * S.cart[i].qty; } return t; }
+function total() { var sub = subtotal(), f = deliveryFee(sub); return isNum(sub) && isNum(f) ? sub + f : null; }
+function totalsHtml() {
+  var sub = subtotal(), f = deliveryFee(sub), st = priceText(sub), tt = priceText(total());
+  if (!st) return '<div class="r"><span>Price</span><span>Confirmed by Ain on WhatsApp</span></div>';
+  var free = C.delivery && isNum(C.delivery.freeAbove) && f > 0 ? '<div class="r small muted"><span>Free delivery from ' + money(C.delivery.freeAbove) + " (" + money(C.delivery.freeAbove - sub) + " more)</span><span></span></div>" : "";
+  return '<div class="r"><span>Subtotal</span><span>' + st + '</span></div><div class="r"><span>Delivery</span><span>' + (f === 0 ? "Free" : money(f)) + "</span></div>" + free + '<div class="r tot"><span>Total</span><span>' + tt + "</span></div>";
+}
 function renderCart() {
   if (!S.cart.length) {
     $("#cartList").innerHTML = '<div class="empty"><p class="lede">Your order is empty.</p><div class="row gap" style="justify-content:center"><a class="secondary" href="#shop">Shop ready-made</a><a class="primary" href="#gallery">Start a custom order</a></div></div>';
@@ -278,8 +291,7 @@ function renderCart() {
     var pt = priceText(isNum(i.price) ? i.price * i.qty : null);
     return '<div class="line"><img class="thumb" src="' + i.photo + '" alt=""><div style="min-width:0"><div class="nm">' + esc(i.name) + (i.qty > 1 ? " ×" + i.qty : "") + '</div><div class="sb">' + esc(i.detail) + '</div><button class="rm" type="button" data-rm="' + n + '">Remove</button></div><div class="pr">' + (pt || "") + '</div></div>';
   }).join("");
-  var tp = priceText(total());
-  $("#cartFoot").innerHTML = '<div class="summary"><div class="r"><span>' + (tp ? "Subtotal" : "Price") + '</span><span>' + (tp || "Confirmed by Ain on WhatsApp") + '</span></div><div class="r small muted"><span>Needs ' + lead() + " days’ notice</span><span></span></div></div>" +
+  $("#cartFoot").innerHTML = '<div class="summary">' + totalsHtml() + '<div class="r small muted"><span>Needs ' + lead() + " days’ notice · delivery only</span><span></span></div></div>" +
     '<div class="row gap" style="margin-top:12px"><a class="secondary" href="#shop">Add more</a><a class="primary" href="#date" style="flex:1">Choose a date</a></div>';
 }
 $("#v-cart").addEventListener("click", function (e) { var r = e.target.closest("[data-rm]"); if (r) { S.cart.splice(+r.dataset.rm, 1); saveCart(); badges(); renderCart(); } });
@@ -305,38 +317,36 @@ function renderDate() {
   $("#calGrid").innerHTML = h;
   $("#calPrev").disabled = m.getFullYear() === today.getFullYear() && m.getMonth() === today.getMonth();
   $("#leadNote").textContent = (lead() === C.leadDays.custom ? "Custom orders need " : "Ready-made bakes need ") + lead() + " days’ notice. Earliest date: " + fmtDate(earliest) + ".";
-  var modes = [["Pickup", "Self-pickup", C.pickupArea]]; if (C.delivery.offered) modes.push(["Delivery", "Delivery", C.delivery.note]);
-  $("#modeOpts").innerHTML = modes.map(function (o) { return '<button class="opt" type="button" data-getmode="' + o[0] + '" aria-pressed="' + (S.mode === o[0]) + '"><b>' + o[1] + '</b><small>' + esc(o[2]) + '</small></button>'; }).join("");
-  $("#addrField").hidden = S.mode !== "Delivery";
+  $("#delNote").textContent = C.delivery.note;
   $("#slotOpts").innerHTML = C.slots.map(function (s) { return '<button class="chip" type="button" data-slot="' + esc(s) + '" aria-pressed="' + (S.slot === s) + '">' + esc(s) + "</button>"; }).join("");
-  $("#dWhenLbl").textContent = S.date ? (S.mode === "Pickup" ? "Self-pickup" : "Delivery") : "Pick a date";
+  $("#dWhenLbl").textContent = S.date ? "Delivery" : "Pick a date";
   $("#dWhen").textContent = S.date ? fmtDate(S.date) + " · " + S.slot : "–";
   $("#dNext").disabled = !S.date;
 }
 $("#v-date").addEventListener("click", function (e) {
   var t = e.target, x;
   if ((x = t.closest("[data-day]")) && !x.disabled) { var m = S.calMonth; S.date = new Date(m.getFullYear(), m.getMonth(), +x.dataset.day); renderDate(); return; }
-  if ((x = t.closest("[data-getmode]"))) { S.mode = x.dataset.getmode; renderDate(); return; }
   if ((x = t.closest("[data-slot]"))) { S.slot = x.dataset.slot; renderDate(); return; }
   if (t.closest("#calPrev")) { S.calMonth = new Date(S.calMonth.getFullYear(), S.calMonth.getMonth() - 1, 1); renderDate(); return; }
   if (t.closest("#calNext")) { S.calMonth = new Date(S.calMonth.getFullYear(), S.calMonth.getMonth() + 1, 1); renderDate(); return; }
-  if (t.closest("#dNext")) { if (S.mode === "Delivery" && !$("#addr").value.trim()) { $("#addr").focus(); toast("Add your delivery address first"); return; } go("send"); }
+  if (t.closest("#dNext")) { if (!$("#addr").value.trim()) { $("#addr").focus(); toast("Add your delivery address first"); return; } go("send"); }
 });
 
 /* ---------------- send ---------------- */
 function renderSend() {
   var tp = priceText(total());
   $("#sendSummary").innerHTML = S.cart.map(function (i) { var pt = priceText(isNum(i.price) ? i.price * i.qty : null); return '<div class="r"><span><b>' + esc(i.name) + (i.qty > 1 ? " ×" + i.qty : "") + '</b><br><span class="small muted">' + esc(i.detail) + "</span></span><span>" + (pt || "") + "</span></div>"; }).join("") +
-    '<div class="r small muted"><span>' + (S.mode === "Pickup" ? "Self-pickup" : "Delivery to " + esc($("#addr").value.trim())) + " · " + fmtDate(S.date) + " · " + esc(S.slot) + '</span><a class="link" style="padding:0" href="#date">Change</a></div>' +
-    (tp ? '<div class="r tot"><span>Estimated total</span><span>' + tp + "</span></div>" : "");
-  $("#estLbl").textContent = tp ? "Estimated total" : "Price"; $("#estAmt").textContent = tp || "Confirmed by Ain";
+    '<div class="r small muted"><span>' + "Delivery to " + esc($("#addr").value.trim()) + " · " + fmtDate(S.date) + " · " + esc(S.slot) + '</span><a class="link" style="padding:0" href="#date">Change</a></div>' +
+    totalsHtml();
+  $("#estLbl").textContent = tp ? "Total incl. delivery" : "Price"; $("#estAmt").textContent = tp || "Confirmed by Ain";
 }
 function orderText(name, phone, notes) {
   var L = ["Assalamualaikum Ain! I'd like to order from The Saif's Bakery:", ""];
-  S.cart.forEach(function (i, n) { L.push((n + 1) + ". " + i.name + (i.qty > 1 ? " x" + i.qty : "")); L.push("   " + i.detail); });
-  L.push("", (S.mode === "Pickup" ? "Self-pickup" : "Delivery") + ": " + fmtDate(S.date) + " " + S.date.getFullYear() + ", " + S.slot);
-  if (S.mode === "Delivery") L.push("Address: " + $("#addr").value.trim());
-  var tp = priceText(total()); if (tp) L.push("Estimated total: " + tp);
+  S.cart.forEach(function (i, n) { var pt = priceText(isNum(i.price) ? i.price * i.qty : null); L.push((n + 1) + ". " + i.name + (i.qty > 1 ? " x" + i.qty : "") + (pt ? " — " + pt : "")); L.push("   " + i.detail); });
+  L.push("", "Delivery: " + fmtDate(S.date) + " " + S.date.getFullYear() + ", " + S.slot);
+  L.push("Address: " + $("#addr").value.trim());
+  var sub = subtotal(), f = deliveryFee(sub), tp = priceText(total());
+  if (tp) L.push("", "Subtotal: " + money(sub), "Delivery: " + (f === 0 ? "Free" : money(f)), "Total: " + tp);
   if (notes) L.push("", "Notes: " + notes);
   L.push("", "Name: " + name, "Phone: " + phone);
   return L.join("\n");

@@ -132,9 +132,8 @@
       <p class="small muted" id="leadNote"></p>
     </div>
     <fieldset class="group plain">
-      <legend><span>How will you get it?</span></legend>
-      <div class="mode2" id="modeOpts"></div>
-      <div class="field" id="addrField" hidden><label for="addr">Delivery address</label><input id="addr" autocomplete="street-address" placeholder="Block, street, unit, postal code"></div>
+      <legend><span>Deliver to</span><span id="delNote"></span></legend>
+      <div class="field"><label for="addr">Delivery address</label><input id="addr" autocomplete="street-address" placeholder="Block, street, unit, postal code" required></div>
     </fieldset>
     <fieldset class="group plain">
       <legend><span>Time slot</span></legend>
@@ -161,7 +160,7 @@
       <div class="field"><label for="sNotes">Anything else? (optional)</label><textarea id="sNotes" rows="2" placeholder="e.g. it's a surprise, please don't call after 9pm"></textarea></div>
       <p class="how">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 0 1-13.5 7.8L3 21l1.2-4.5A9 9 0 1 1 21 12z"/></svg>
-        <span>Your order opens in WhatsApp, ready to send to Ain. She confirms the price, the details and payment (PayNow) in the chat. You can send reference photos there too.</span>
+        <span>Your order opens in WhatsApp, ready to send to Ain. She confirms the details and payment (PayNow) in the chat. You can send reference photos there too.</span>
       </p>
       <p class="err" id="sendErr" role="alert"></p>
       <div class="actionbar">
@@ -186,7 +185,7 @@
 
   <footer class="foot">
     <img src="img/logo.png" alt="" width="56" height="56">
-    <p><b>The Saif’s Bakery</b><br>Muslim-owned home bakery in Singapore.<br>Orders by appointment only.</p>
+    <p><b>The Saif’s Bakery</b><br>Muslim-owned home bakery in Singapore.<br>Islandwide delivery only.</p>
     <p><a id="footInsta" href="#" target="_blank" rel="noopener">Instagram @bake.withthesaifs</a></p>
   </footer>
 </main>
